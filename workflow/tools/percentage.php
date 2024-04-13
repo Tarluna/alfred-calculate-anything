@@ -11,6 +11,7 @@ class Percentage extends CalculateAnything implements CalculatorInterface
     private $keywords;
     private $lang;
     private $parsed;
+    private $decimal_separator;
 
     /**
      * Construct
@@ -21,6 +22,7 @@ class Percentage extends CalculateAnything implements CalculatorInterface
         $this->keywords = $this->getKeywords('percentage');
         $this->stop_words = $this->getStopWords('percentage');
         $this->lang = $this->getTranslation('percentage');
+        $this->decimal_separator = $this->getSetting('decimal_separator', 'dot');
     }
 
 
@@ -52,8 +54,9 @@ class Percentage extends CalculateAnything implements CalculatorInterface
             $query = str_replace($k, $value, trim($query));
         }
 
-        // preg_match('/^([0-9,.\s]+)\s?' . $stopwords . '\s?(\d*\.?\d*%?)/i', $query, $matches);
-        preg_match('/^(\d*\.?\d*%?)\s?' . $stopwords . '\s?(\d*\.?\d*%?)/i', $query, $matches);
+        $decimalSeparator = $this->decimal_separator === 'dot' ? '.' : ',';
+        $regexToCheck = '/^(\d*\\' . $decimalSeparator . '?\d*%?)\s?' . $stopwords . '\s?(\d*\\' . $decimalSeparator . '?\d*%?)/i';
+        preg_match($regexToCheck, $query, $matches);
 
         if (empty($matches)) {
             return false;
@@ -147,8 +150,9 @@ class Percentage extends CalculateAnything implements CalculatorInterface
      */
     private function percentageOf()
     {
+        $decimalSeparator = $this->decimal_separator === 'dot' ? '.' : ',';
         $query = $this->query;
-        $query = preg_replace('/[^0-9.%]/', ' ', $query);
+        $query = preg_replace('/[^0-9' . $decimalSeparator . '%]/', ' ', $query);
         $query = preg_replace('!\s+!', ' ', $query);
         $data = explode(' ', $query);
 
